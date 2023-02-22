@@ -67,6 +67,43 @@ def _print_unknown_exc(exc: Exception) -> NoReturn:
     _print_error(f'Unknown exception: {exc}')
 
 
+WARNING_COLOR = 'yellow'
+
+
+def _print_gen_cmd_byte_order_warning(byte_order: barectf.ByteOrder):
+    # The opposite_byte_order is written as a valid byte-order
+    # configuration value because in the message below it is used to
+    # suggest a config correction.
+    native_byte_order, opposite_byte_order = (('little endian', 'big-endian')
+                                              if byte_order == barectf.ByteOrder.LITTLE_ENDIAN
+                                              else ('big endian', 'little-endian'))
+
+    msg_main = ("The barectf tracer is configured for tracing a "
+                + native_byte_order + " system.")
+
+    msg_details = ("If the system to be traced is not "
+                   + native_byte_order + ", change the byte-order property in "
+                   "the barectf configuration yaml file(s) to match the "
+                   "endianness of the system that will be traced (e.g. "
+                   "byte-order: " + opposite_byte_order + ").")
+
+    termcolor.cprint('Warning:', WARNING_COLOR, file=sys.stderr, end=' ')
+    termcolor.cprint(msg_main, WARNING_COLOR, attrs=['bold'], file=sys.stderr)
+    termcolor.cprint(msg_details, WARNING_COLOR, file=sys.stderr)
+
+
+def _print_effective_cfg_cmd_byte_order_warning(byte_order: barectf.ByteOrder):
+    native_byte_order = ('little endian'
+                         if byte_order == barectf.ByteOrder.LITTLE_ENDIAN
+                         else 'big endian')
+
+    msg = ("This barectf configuration generates a tracer for a "
+           + native_byte_order + " system.")
+
+    termcolor.cprint('Warning:', WARNING_COLOR, file=sys.stderr, end=' ')
+    termcolor.cprint(msg, WARNING_COLOR, attrs=['bold'], file=sys.stderr)
+
+
 # Finds and returns all the option items in `items` having the long name
 # `long_name`.
 def _find_opt_items(items: Iterable[barectf_argpar._Item],
@@ -493,6 +530,16 @@ class _GenCmd(_Cmd):
 
                 config = barectf.configuration_from_file(f, True, self.cfg.inclusion_dirs,
                                                          self.cfg.ignore_inclusion_file_not_found)
+
+                # barectf.configuration_file_major_version() reads the
+                # file again
+                # below: rewind.
+                f.seek(0)
+
+                # For barectf 2 configuration files, warn that the
+                # configured native byte order may be incorrect.
+                if (barectf.configuration_file_major_version(f) == 2):
+                    _print_gen_cmd_byte_order_warning(config.trace.type.native_byte_order)
         except barectf._ConfigurationParseError as exc:
             _print_config_error(exc)
         except Exception as exc:
@@ -558,6 +605,23 @@ class _ShowEffectiveCfgCmd(_Cmd):
                 print(barectf.effective_configuration_file(f, True, self.cfg.inclusion_dirs,
                                                            self.cfg.ignore_inclusion_file_not_found,
                                                            self.cfg.indent_space_count))
+
+                # barectf.configuration_file_major_version() reads the
+                # file again
+                # below: rewind.
+                f.seek(0)
+
+                # For barectf 2 configuration files, warn that the
+                # configured native byte order may be incorrect.
+                if (barectf.configuration_file_major_version(f) == 2):
+                    # barectf.configuration_from_file() reads the file again
+                    # below: rewind.
+                    f.seek(0)
+
+                    config = barectf.configuration_from_file(f, True, self.cfg.inclusion_dirs,
+                                                         self.cfg.ignore_inclusion_file_not_found)
+
+                    _print_effective_cfg_cmd_byte_order_warning(config.trace.type.native_byte_order)
         except barectf._ConfigurationParseError as exc:
             _print_config_error(exc)
         except Exception as exc:
