@@ -491,6 +491,7 @@ class _Parser(config_parse_common._Parser):
 
         # copy `byte-order` property as `native-byte-order` property
         _copy_prop_if_exists(v3_trace_type_node, v2_trace_node, 'byte-order', 'native-byte-order')
+        v3_trace_type_node['force-byte-order'] = True
 
         # copy `uuid` property
         _copy_prop_if_exists(v3_trace_type_node, v2_trace_node, 'uuid')

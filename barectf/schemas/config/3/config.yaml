@@ -93,6 +93,9 @@ definitions:
     properties:
       native-byte-order:
         $ref: https://barectf.org/schemas/config/common/common.json#/definitions/byte-order-prop
+      force-byte-order:
+        title: Force trace byte order (regardless of native architecture byte order)
+        type: boolean
       uuid:
         $ref: https://barectf.org/schemas/config/common/common.json#/definitions/opt-trace-type-uuid-prop
       $features:

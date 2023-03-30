@@ -657,8 +657,9 @@ class _Parser(barectf_config_parse_common._Parser):
                 dsts.add(self._create_dst(dst_name, dst_node))
 
             # create trace type
-            return barectf_config.TraceType(self._native_byte_order, dsts, trace_type_uuid,
-                                            features)
+            force_byte_order = self._trace_type_node.get('force-byte-order')
+            return barectf_config.TraceType(self._native_byte_order, force_byte_order,
+                                            dsts, trace_type_uuid, features)
         except _ConfigurationParseError as exc:
             _append_error_ctx(exc, 'Trace type')
 

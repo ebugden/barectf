@@ -704,9 +704,10 @@ class TraceTypeFeatures:
 
 
 class TraceType:
-    def __init__(self, native_byte_order: ByteOrder, data_stream_types: Set[DataStreamType],
+    def __init__(self, native_byte_order: ByteOrder, force_byte_order: bool, data_stream_types: Set[DataStreamType],
                  uuid: _OptUuid = None, features: Optional[TraceTypeFeatures] = None):
         self._native_byte_order = native_byte_order
+        self._force_byte_order = force_byte_order
         self._data_stream_types = frozenset(data_stream_types)
 
         # assign unique IDs
@@ -744,6 +745,10 @@ class TraceType:
     @property
     def native_byte_order(self) -> ByteOrder:
         return self._native_byte_order
+    
+    @property
+    def force_byte_order(self) -> bool:
+        return self._force_byte_order
 
     @property
     def uuid(self) -> _OptUuid:
